@@ -42,12 +42,16 @@ function main()
     Precision = 25;
 
     move_dots();
+    close_ptb();
 
     function move_dots()
         dots_property = rand(nDots,1);
         dots_property = round(14*dots_property);
         dots_clock = zeros(nDots,1);
+        end_flag = 0;
+        t01 = GetSecs();
         while 1
+            t0 = GetSecs();
             % 𝐷𝑜𝑡 𝐷𝑖𝑟𝑒𝑐𝑡𝑖𝑜𝑛𝑠 ~ 𝑁(𝐿𝑒𝑓𝑡|𝑅𝑖𝑔ℎ𝑡 × 𝑀𝑒𝑎𝑛 𝑂𝑟𝑖𝑒𝑛𝑎𝑡𝑖𝑜𝑛, 𝐺𝑎𝑢𝑠𝑠𝑖𝑎𝑛 𝑁𝑜𝑖𝑠𝑒 × 1/𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛)
             DotDirections = MeanOrientation + randn(nDots, 1) * sqrt(1/Precision);
             
@@ -72,18 +76,22 @@ function main()
             Screen('DrawDots', w, [0,0], 16, [255, 0, 0], center_dots, 1);
             Screen('FrameOval', w, 0, center, 30);
             Screen('Flip', w);
+
+            dots_clock = dots_clock + 1;
+            end_flag = end_flag + 1;            
             
-            [resp_time, resp_key] = Check_Press(keys,0);
-            if resp_key(37)
-                response = 1;
-            elseif resp_key(39)
-                response = 2;
-            elseif resp_key(27)
-                close_ptb();
+            while 1
+                t = GetSecs();
+                if t-t0>=1/60
+                    break;
+                end
+            end
+
+            if end_flag == 15
+                t = GetSecs();
+                disp(t-t01)
                 break;
             end
-            WaitSecs(1/60);
-            dots_clock = dots_clock + 1;
         end
     end
 
