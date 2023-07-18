@@ -169,12 +169,11 @@ function main()
             y = xy(2,:);
 
             if ~move_direction
-                %Left
-                x = x + dot_step * sin(DotDirections');
+                x = x - dot_step * sin(DotDirections'/180*pi);
             else
-                x = x - dot_step * sin(DotDirections');
+                x = x + dot_step * sin(DotDirections'/180*pi);
             end
-            y = y + dot_step * cos(DotDirections');
+            y = y - dot_step * cos(DotDirections'/180*pi);
             
             border = x.*x + y.*y;
             x(border >= r*r) = -x(border >= r*r);
@@ -244,7 +243,7 @@ function main()
     function confidence = show_confidence()
         instruct = '请选择您的自信程度:';
         t0=GetSecs;
-        x_dot = centerX + 0.15*(1-2*rand(1))*centerX;
+        x_dot = centerX + 0.15*(1-2*rand(1))*centerX/2;
         while 1
             [~, keyCode] = Check_Press(keys, 0);
             Screen('DrawLine', w, 0, 3*centerX/4, 3*centerY/2, 5*centerX/4, 3*centerY/2, 10);
