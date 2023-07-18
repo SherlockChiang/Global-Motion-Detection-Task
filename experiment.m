@@ -56,8 +56,8 @@ function main()
     timestamp_end_list = cell(ntrials,1);
     orientation_list = zeros(ntrials,1);
     
-    pre_sign = 0;
-    MeanOrientation = 10;
+    pre_signs = [0,0];
+    MeanOrientation = [10,10];
     % Precision = 25;
     
     rng('shuffle')
@@ -86,7 +86,7 @@ function main()
     repeatLoop = 1;
     while repeatLoop
         repeatLoop = 0;
-        % 0:15° 1:25°
+        
         condition_Precision = [15*ones(1,ntrials/2),25*ones(1,ntrials/2)];
         condition_Precision = condition_Precision(randperm(length(condition_Precision)));
         % count the number of repeated trials
@@ -106,7 +106,7 @@ function main()
     for i = 1:ntrials
         tmp = datetime("now");
         timestamp_start_list{i} = tmp;
-        orientation_list(i) = MeanOrientation;
+        orientation_list(i) = MeanOrientation([15,25]==condition_Precision(i));
         move_direction = condition(i);
         Precision = condition_Precision(i);
 
@@ -160,7 +160,7 @@ function main()
         while 1
             t0 = GetSecs();
             % 𝐷𝑜𝑡 𝐷𝑖𝑟𝑒𝑐𝑡𝑖𝑜𝑛𝑠 ~ 𝑁(𝐿𝑒𝑓𝑡|𝑅𝑖𝑔ℎ𝑡 × 𝑀𝑒𝑎𝑛 𝑂𝑟𝑖𝑒𝑛𝑎𝑡𝑖𝑜𝑛, 𝐺𝑎𝑢𝑠𝑠𝑖𝑎𝑛 𝑁𝑜𝑖𝑠𝑒 × 1/𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛)
-            DotDirections = MeanOrientation + randn(nDots, 1) * sqrt(1/Precision);
+            DotDirections = MeanOrientation([15,25]==condition_Precision(i)) + randn(nDots, 1) * sqrt(1/Precision);
             
             xy_tmp = gen_dots();
             xy(:,dots_clock == dots_property) = xy_tmp(:,dots_clock == dots_property);
@@ -287,20 +287,25 @@ function main()
     end
 
     function staircase(sign)
+        tmp_orientation = MeanOrientation([15,25]==condition_Precision(i));
+        pre_sign = pre_signs([15,25]==condition_Precision(i));
         if pre_sign == 1 && sign == 1
-            MeanOrientation = MeanOrientation - 0.5;
+            tmp_orientation = tmp_orientation - 0.5;
             pre_sign = 0;
         elseif sign == 0
-            MeanOrientation = MeanOrientation + 0.5;
+            tmp_orientation = tmp_orientation + 0.5;
         end
         if sign == 1
             pre_sign = 1;
-        else 
+        end
+        if sign == 0
             pre_sign = 0;
         end
-        if MeanOrientation == 0.5
-            MeanOrientation = 1;
+        if tmp_orientation == 0.5
+            tmp_orientation = 1;
         end
+        MeanOrientation([15,25]==condition_Precision(i)) = tmp_orientation;
+        pre_signs([15,25]==condition_Precision(i)) = pre_sign;
     end
 
     function close_ptb()
