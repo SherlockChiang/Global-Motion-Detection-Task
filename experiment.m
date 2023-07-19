@@ -45,16 +45,21 @@ function main()
     %stim_time = 0.25;
     choice_time = 0.8;
     conf_time = 2;
-
-    ntrials = 10;
+    
+    trials = 60;
+    nblock = 8;
+    ntrials = trials*nblock;% 8 block
     index_trials = 1:ntrials;
     resp_time_list = zeros(ntrials,1);
     choice_list = zeros(ntrials,1);
     correct_list = zeros(ntrials,1);
+    valid_list = zeros(ntrials,1);
     confidence_list = zeros(ntrials,1);
     timestamp_start_list = cell(ntrials,1);
     timestamp_end_list = cell(ntrials,1);
     orientation_list = zeros(ntrials,1);
+    condition_list = zeros(ntrials,1);
+    condition_Precision_list = zeros(ntrials,1);
     
     pre_signs = [0,0];
     MeanOrientation = [10,10];
@@ -62,78 +67,85 @@ function main()
     
     rng('shuffle')
     
-    repeatLoop = 1;
-    repeatUpperLimit = 4;
-    while repeatLoop
-        repeatLoop = 0;
-        % 0:left 1:right
-        condition = [zeros(1,ntrials/2),ones(1,ntrials/2)];
-        condition = condition(randperm(length(condition)));
-        % count the number of repeated trials
-        repeatCount = 1;
-        for i = 2:length(condition)
-            if condition(i)==condition(i-1)
-                repeatCount = repeatCount + 1;
-                if repeatCount > repeatUpperLimit
-                    repeatLoop = 1;
+    %% block
+    for iblock = 1:nblock
+        repeatLoop = 1;
+        repeatUpperLimit = 4;
+        while repeatLoop
+            repeatLoop = 0;
+            % 0:left 1:right
+            condition = [zeros(1,trials/2),ones(1,trials/2)];
+            condition = condition(randperm(length(condition)));
+            % count the number of repeated trials
+            repeatCount = 1;
+            for i = 2:length(condition)
+                if condition(i)==condition(i-1)
+                    repeatCount = repeatCount + 1;
+                    if repeatCount > repeatUpperLimit
+                        repeatLoop = 1;
+                    end
+                else
+                    repeatCount = 1;
                 end
-            else
-                repeatCount = 1;
             end
         end
-    end
-
-    repeatLoop = 1;
-    while repeatLoop
-        repeatLoop = 0;
-        
-        condition_Precision = [15*ones(1,ntrials/2),25*ones(1,ntrials/2)];
-        condition_Precision = condition_Precision(randperm(length(condition_Precision)));
-        % count the number of repeated trials
-        repeatCount = 1;
-        for i = 2:length(condition_Precision)
-            if condition_Precision(i)==condition_Precision(i-1)
-                repeatCount = repeatCount + 1;
-                if repeatCount > repeatUpperLimit
-                    repeatLoop = 1;
+        condition_list(trials*iblock-trials+1:trials*iblock) = condition;
+    
+        repeatLoop = 1;
+        while repeatLoop
+            repeatLoop = 0;
+            
+            condition_Precision = [15*ones(1,trials/2),25*ones(1,trials/2)];
+            condition_Precision = condition_Precision(randperm(length(condition_Precision)));
+            % count the number of repeated trials
+            repeatCount = 1;
+            for i = 2:length(condition_Precision)
+                if condition_Precision(i)==condition_Precision(i-1)
+                    repeatCount = repeatCount + 1;
+                    if repeatCount > repeatUpperLimit
+                        repeatLoop = 1;
+                    end
+                else
+                    repeatCount = 1;
                 end
-            else
-                repeatCount = 1;
             end
         end
+        condition_Precision_list(trials*iblock-trials+1:trials*iblock) = condition_Precision;
+    
+        for i = 1:trials
+            tmp = datetime("now");
+            timestamp_start_list{i} = tmp;
+            orientation_list(i) = MeanOrientation([15,25]==condition_Precision(i));
+            move_direction = condition(i);
+            Precision = condition_Precision(i);
+    
+            show_fixation();
+            show_stimulus();
+            [resp_time, choice, correct, valid] = show_choice(keys, choice_time);
+            confidence = show_confidence();
+            
+            index_trials(i) = i;
+            resp_time_list(i) = resp_time;
+            choice_list(i) = choice;
+            correct_list(i) = correct;
+            valid_list(i) = valid;
+            confidence_list(i) = confidence;
+    
+            staircase(correct, valid);
+            
+            tmp = datetime("now");
+            timestamp_end_list{i} = tmp;
+    
+            results.dataMat = [index_trials',condition_list,condition_Precision_list,resp_time_list,choice_list,correct_list,valid_list,confidence_list,orientation_list];
+            results.timestamp_start = timestamp_start_list;
+            results.timestamp_end = timestamp_end_list;
+            save(filename,'results'); 
+        end
+        
+        close_ptb();
     end
 
-    for i = 1:ntrials
-        tmp = datetime("now");
-        timestamp_start_list{i} = tmp;
-        orientation_list(i) = MeanOrientation([15,25]==condition_Precision(i));
-        move_direction = condition(i);
-        Precision = condition_Precision(i);
-
-        show_fixation();
-        show_stimulus();
-        [resp_time, choice, correct] = show_choice(keys, choice_time);
-        confidence = show_confidence();
-        
-        index_trials(i) = i;
-        resp_time_list(i) = resp_time;
-        choice_list(i) = choice;
-        correct_list(i) = correct;
-        confidence_list(i) = confidence;
-
-        staircase(correct);
-        
-        tmp = datetime("now");
-        timestamp_end_list{i} = tmp;
-
-        results.dataMat = [index_trials',condition',condition_Precision',resp_time_list,choice_list,correct_list,confidence_list,orientation_list];
-        results.timestamp_start = timestamp_start_list;
-        results.timestamp_end = timestamp_end_list;
-        save(filename,'results'); 
-    end
-    
-    close_ptb();
-    
+    %% functions
     function show_fixation()
         Screen('DrawDots', w, [0,0], 16, [255, 0, 0], center_dots, 1);
         Screen('Flip', w);
@@ -211,7 +223,8 @@ function main()
         xy = [x'; y'];
     end
 
-    function [resp_time, choice, correct] = show_choice(keys, choice_time)
+    function [resp_time, choice, correct, valid] = show_choice(keys, choice_time)
+        valid = 1;
         DrawFormattedText(w,double('左 or 右？'),'center','center',0)
         Screen('Flip',w); % flip
         [resp_time, keyCode] = Check_Press(keys, choice_time);
@@ -230,10 +243,12 @@ function main()
             correct = 0;
         end
         if resp_time < 0.1
+            valid = 0;
             DrawFormattedText(w,double('太快了！'),'center','center',0)
             Screen('Flip',w); % flip
             WaitSecs(0.5)
         elseif isnan(resp_time)
+            valid = 0;
             DrawFormattedText(w,double('太慢了！'),'center','center',0)
             Screen('Flip',w); % flip
             WaitSecs(0.5)
@@ -286,26 +301,28 @@ function main()
         end
     end
 
-    function staircase(sign)
-        tmp_orientation = MeanOrientation([15,25]==condition_Precision(i));
-        pre_sign = pre_signs([15,25]==condition_Precision(i));
-        if pre_sign == 1 && sign == 1
-            tmp_orientation = tmp_orientation - 0.5;
-            pre_sign = 0;
-        elseif sign == 0
-            tmp_orientation = tmp_orientation + 0.5;
+    function staircase(sign,valid)
+        if valid
+            tmp_orientation = MeanOrientation([15,25]==condition_Precision(i));
+            pre_sign = pre_signs([15,25]==condition_Precision(i));
+            if pre_sign == 1 && sign == 1
+                tmp_orientation = tmp_orientation - 0.5;
+                pre_sign = 0;
+            elseif sign == 0
+                tmp_orientation = tmp_orientation + 0.5;
+            end
+            if sign == 1
+                pre_sign = 1;
+            end
+            if sign == 0
+                pre_sign = 0;
+            end
+            if tmp_orientation == 0.5
+                tmp_orientation = 1;
+            end
+            MeanOrientation([15,25]==condition_Precision(i)) = tmp_orientation;
+            pre_signs([15,25]==condition_Precision(i)) = pre_sign;
         end
-        if sign == 1
-            pre_sign = 1;
-        end
-        if sign == 0
-            pre_sign = 0;
-        end
-        if tmp_orientation == 0.5
-            tmp_orientation = 1;
-        end
-        MeanOrientation([15,25]==condition_Precision(i)) = tmp_orientation;
-        pre_signs([15,25]==condition_Precision(i)) = pre_sign;
     end
 
     function close_ptb()
