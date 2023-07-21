@@ -8,5 +8,5 @@ Allen, M., Hauser, T. U., Schwarzkopf, D. S., Dolan, R. J., & Rees, G. (2022). U
 
 eye tracker data from Tobii Pro Lab
 
-equipment: Tobii Pro Glasses 2
+**equipment: Tobii Pro Glasses 2**
 
