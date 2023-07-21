@@ -6,9 +6,6 @@ main();
 function main()
     datetime.setDefaultFormats('default',"yyyy/MM/dd HH:mm:ss:SSS")
     time_start = datetime("now");
-    % found_eyetrackers = tobii.find_all_eyetrackers();
-    % my_eyetracker = found_eyetrackers(1);
-    % Calibrate the eye tracker
 
     % subject information 
     prompt = {'subject ID' 'age' 'gender'};
@@ -177,7 +174,7 @@ function main()
             show_stimulus();
             [resp_time, choice, correct, valid] = show_choice(keys, choice_time);
             confidence = show_confidence();
-            
+
             resp_time_list(i+trials*(iblock-1)) = resp_time;
             choice_list(i+trials*(iblock-1)) = choice;
             correct_list(i+trials*(iblock-1)) = correct;
@@ -398,8 +395,17 @@ function main()
         if timeOut == 0
             [~,t,keyCode] = KbCheck;
         else
-            while ((t-t0) < timeOut)
-                [~,t,keyCode] = KbCheck;
+            keyPressed = 0;
+            t_tmp = 0;
+            while (t_tmp-t0) < timeOut
+                [~,t_tmp,keyCode_tmp] = KbCheck;
+                if keyPressed == 0
+                    if any(keyCode_tmp(keys))
+                        keyPressed = 1;
+                        t = t_tmp;
+                        keyCode = keyCode_tmp;
+                    end
+                end
             end
         end
 
