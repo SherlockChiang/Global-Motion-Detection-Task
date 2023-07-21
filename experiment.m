@@ -45,7 +45,7 @@ function main()
     
     trials = 60;
     nblock = 8;
-    ntrials = trials*nblock;% 8 block
+    ntrials = trials*nblock;
     index_trials = 1:ntrials;
     resp_time_list = zeros(ntrials,1);
     choice_list = zeros(ntrials,1);
@@ -190,7 +190,7 @@ function main()
             results.timestamp_start = timestamp_start_list;
             results.timestamp_end = timestamp_end_list;
             save(filename,'results');
-            close_ptb();
+            % close_ptb();
         end
     end
 
@@ -290,6 +290,7 @@ function main()
         else
             correct = 0;
         end
+
         if resp_time < 0.1
             valid = 0;
             Screen('DrawDots', w, xy, 8, 0, center_dots, 1);
@@ -371,7 +372,7 @@ function main()
             if sign == 0
                 pre_sign = 0;
             end
-            if tmp_orientation == 0.1
+            if (tmp_orientation-0.1) < 0.01
                 tmp_orientation = 0.2;
             end
             MeanOrientation([15,25]==condition_Precision(i)) = tmp_orientation;
