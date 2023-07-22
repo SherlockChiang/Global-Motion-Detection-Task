@@ -298,6 +298,7 @@ function main()
             DrawFormattedText(w,double('太快了！'),'center','center',0)
             Screen('Flip',w); % flip
             WaitSecs(0.5)
+            t = GetSecs();
         elseif isnan(resp_time)
             valid = 0;
             Screen('DrawDots', w, xy, 8, 0, center_dots, 1);
@@ -305,6 +306,7 @@ function main()
             DrawFormattedText(w,double('太慢了！'),'center','center',0)
             Screen('Flip',w); % flip
             WaitSecs(0.5)
+            t = GetSecs();
         end
     end
 
