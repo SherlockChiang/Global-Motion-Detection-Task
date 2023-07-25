@@ -312,7 +312,7 @@ function main()
 
     function confidence = show_confidence()
         xy = gen_dots();
-        t0 = t;
+        t0 = GetSecs();
         x_dot = centerX + 0.15*(1-2*rand(1))*centerX/2;
         while 1
             [~, keyCode] = Check_Press(keys, 0);
